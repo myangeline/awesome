@@ -12,4 +12,8 @@ def test_user():
     )
     user.save()
 
-test_user()
+# test_user()
+
+from collections import deque
+import itertools
+itertools.permutations

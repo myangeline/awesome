@@ -1,10 +1,12 @@
 import hashlib
 from aiohttp import web
+import json
 from conf.config import configs
 from www import markdown2
 from www.apis import Page, APIValueError
 from www.coreweb import get, post
 from www.models import *
+from www.util.handlerutil import user2cookie
 
 __author__ = 'sunshine'
 
@@ -74,6 +76,13 @@ def get_blog(blog_id):
     }
 
 
+@get('/signin')
+def signin():
+    return {
+        '__template__': 'signin.html'
+    }
+
+
 @post('/api/authenticate')
 def authenticate(*, email, password):
     if not email:
@@ -93,6 +102,14 @@ def authenticate(*, email, password):
     if user.password != sha1.hexdigest():
         raise APIValueError('password', 'Invalid password.')
 
+    # 验证通过
     r = web.Response()
-    r.set_cookie(COOKIE_NAME, )
+    r.set_cookie(COOKIE_NAME, user2cookie(user, 86400, _COOKIE_KEY),
+                 max_age=86400, httponly=True)
+
+    user.password = '******'
+    r.content_type = 'application/json'
+    r.body = json.dumps(user, ensure_ascii=False).encode()
+    return r
+
 

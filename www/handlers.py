@@ -1,9 +1,15 @@
+import hashlib
+from aiohttp import web
+from conf.config import configs
 from www import markdown2
-from www.apis import Page
-from www.coreweb import get
+from www.apis import Page, APIValueError
+from www.coreweb import get, post
 from www.models import *
 
 __author__ = 'sunshine'
+
+COOKIE_NAME = 'awe_session'
+_COOKIE_KEY = configs.session.secret
 
 
 def get_page_index(page_str):
@@ -29,7 +35,19 @@ def index(*, page='1'):
     num = yield from Blog.findnumber('count(id)')
     page = Page(num, page_index)
     if num == 0:
-        blogs = []
+        summary = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, ' \
+                  'sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+        blogs = [
+            Blog(id='1', name='Test Blog', summary=summary, created_at=time.time()-120),
+            Blog(id='2', name='Something New', summary=summary, created_at=time.time()-3600),
+            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time()-7200),
+            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time()-7200),
+            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time()-7200),
+            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time()-7200),
+            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time()-7200),
+            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time()-7200),
+            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time()-7200),
+        ]
     else:
         blogs = yield from Blog.findall(orderBy='created_at desc', limit=(page.offset, page.limit))
     return {
@@ -39,15 +57,42 @@ def index(*, page='1'):
     }
 
 
-@get('/blog/{id}')
-def get_blog(id):
-    blog = yield from Blog.find(id)
-    comments = yield from Comment.findAll('blog_id=?', [id], orderBy='created_at desc')
-    for c in comments:
-        c.html_content = text2html(c.content)
-    blog.html_content = markdown2.markdown(blog.content)
+@get('/blog/{blog_id}')
+def get_blog(blog_id):
+    blog = yield from Blog.find(blog_id)
+    if blog:
+        blog.html_content = markdown2.markdown(blog.content)
+    else:
+        summary = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, ' \
+                  'sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+        blog = Blog(id='1', name='Test Blog', summary=summary, created_at=time.time()-120)
+        blog.html_content = summary
+    print(blog)
     return {
         '__template__': 'blog.html',
         'blog': blog,
-        'comments': comments
     }
+
+
+@post('/api/authenticate')
+def authenticate(*, email, password):
+    if not email:
+        raise APIValueError('email', 'Invalid email.')
+    if not password:
+        raise APIValueError('password', 'Invalid password.')
+
+    users = yield from User.findall('email=?', [email])
+    if len(users) == 0:
+        raise APIValueError('email', 'Email not exist.')
+    user = users[0]
+    # 验证密码
+    sha1 = hashlib.sha1()
+    sha1.update(user.id.encode())
+    sha1.update(b':')
+    sha1.update(password.encode())
+    if user.password != sha1.hexdigest():
+        raise APIValueError('password', 'Invalid password.')
+
+    r = web.Response()
+    r.set_cookie(COOKIE_NAME, )
+

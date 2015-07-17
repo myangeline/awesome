@@ -52,7 +52,7 @@ def execute(sql, args, autocommit=True):
         try:
             cur = yield from conn.cursor()
             yield from cur.execute(sql.replace('?', '%s'), args)
-            affected = cur.rowcount()
+            affected = cur.rowcount
             yield from cur.close()
             if not autocommit:
                 yield from conn.commit()

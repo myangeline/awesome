@@ -5,63 +5,69 @@
     <title>登录 - Awesome Python Webapp</title>
     <link rel="stylesheet" href="/static/css/uikit.min.css">
     <link rel="stylesheet" href="/static/css/uikit.gradient.min.css">
-    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/jquery-1.11.3.min.js"></script>
     <script src="/static/js/sha1.min.js"></script>
     <script src="/static/js/uikit.min.js"></script>
-    <script src="/static/js/vue.min.js"></script>
-    <script src="/static/js/awesome.js"></script>
-    <script>
-        $(function() {
-            var vmAuth = new Vue({
-                el: '#vm',
-                data: {
-                    email: '',
-                    passwd: ''
-                },
-                methods: {
-                    submit: function(event) {
-                        event.preventDefault();
-                        var
-                            $form = $('#vm'),
-                            email = this.email.trim().toLowerCase(),
-                            data = {
-                                email: email,
-                                passwd: this.passwd==='' ? '' : CryptoJS.SHA1(email + ':' + this.passwd).toString()
-                            };
-                        $form.postJSON('/api/authenticate', data, function(err, result) {
-                            if (! err) {
-                                location.assign('/');
-                            }
-                        });
-                    }
-                }
-            });
-        });
-    </script>
 </head>
 <body class="uk-height-1-1">
     <div class="uk-vertical-align uk-text-center uk-height-1-1">
         <div class="uk-vertical-align-middle" style="width: 320px">
-            <p><a href="/" class="uk-icon-button"><i class="uk-icon-html5"></i></a> <a href="/">Awesome Python Webapp</a></p>
-            <form id="vm" v-on="submit: submit" class="uk-panel uk-panel-box uk-form">
+            <p><a href="/">Awesome</a></p>
+            <form id="vm" class="uk-panel uk-panel-box uk-form">
                 <div class="uk-alert uk-alert-danger uk-hidden"></div>
                 <div class="uk-form-row">
                     <div class="uk-form-icon uk-width-1-1">
                         <i class="uk-icon-envelope-o"></i>
-                        <input v-model="email" name="email" type="text" placeholder="电子邮件" maxlength="50" class="uk-width-1-1 uk-form-large">
+                        <input v-model="email" name="email" type="text" placeholder="电子邮件"
+                               maxlength="50" class="uk-width-1-1 uk-form-large" required>
                     </div>
                 </div>
                 <div class="uk-form-row">
                     <div class="uk-form-icon uk-width-1-1">
                         <i class="uk-icon-lock"></i>
-                        <input v-model="passwd" name="passwd" type="password" placeholder="口令" maxlength="50" class="uk-width-1-1 uk-form-large">
+                        <input v-model="password" name="password" type="password" required
+                               placeholder="口令" maxlength="50" class="uk-width-1-1 uk-form-large">
                     </div>
                 </div>
                 <div class="uk-form-row">
-                    <button type="submit" class="uk-width-1-1 uk-button uk-button-primary uk-button-large"><i class="uk-icon-sign-in"></i> 登录</button>
+                    <button type="button" class="uk-width-1-1 uk-button uk-button-primary uk-button-large btn-submit">
+                        <i class="uk-icon-sign-in"></i> 登录</button>
                 </div>
             </form>
         </div>
     </div>
 </body>
+
+<script>
+    $(function(){
+
+        var check_email = function (email) {
+            var pattern = /^([\.a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\.[a-zA-Z0-9_-])+/;
+            return pattern.test(email);
+        };
+
+        $(".btn-submit").click(function(){
+            var email = $("input[name='email']").val().trim().toLowerCase();
+            var password = $("input[name='password']").val();
+            if (!check_email(email)){
+                var $uk_alert = $('.uk-alert');
+                $uk_alert.html('邮箱格式不正确!');
+                $uk_alert.removeClass('uk-hidden');
+                $("input[name='email']").focus();
+            }else{
+                var sha1_pass = CryptoJS.SHA1(email + ':' + password).toString();
+                $.post('/api/authenticate', {'email': email, 'password': sha1_pass}, function(data){
+                    console.log(data);
+                    if(data.status == 'ok'){
+                        window.location.href = '/manage/';
+                    }else{
+                        var $uk_alert = $('.uk-alert');
+                        $uk_alert.html(data.message);
+                        $uk_alert.removeClass('uk-hidden');
+                    }
+                }, 'json');
+            }
+        });
+    })
+</script>
 </html>

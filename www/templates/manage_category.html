@@ -1,0 +1,144 @@
+{% extends '__base__.html' %}
+
+{% block title %}日志{% endblock %}
+
+{% block beforehead %}
+<link rel="stylesheet" href="/static/css/components/notify.gradient.css">
+<script src="/static/js/components/notify.js"></script>
+<script>
+    $(function(){
+        var modal;
+        $('.btn-add').click(function(){
+            var category = $("input[name='category']").val();
+            if (category == undefined || $.trim(category) == ''){
+                return false;
+            }
+            $.post('/api/category/add', {'name': category}, function(data){
+                console.log(data);
+                if (data.status == 'ok') {
+                    window.location.reload();
+                }else{
+                    UIkit.notify("分类添加失败", {status:'danger', timeout : 1000});
+                }
+            }, 'json');
+        });
+
+        $('.cate-edit').click(function(){
+            var $categeory = $(this).parent().parent().children().find('a');
+            var cate_id = $categeory.attr('cate_id');
+            var cate_name = $categeory.text();
+            $("input[name='category_id']").val(cate_id);
+            $("input[name='category_name']").val(cate_name);
+            modal = UIkit.modal("#modal-category");
+            if ( modal.isActive() ) {
+                modal.hide();
+            } else {
+                modal.show();
+            }
+        });
+
+        $('.btn-cancel').click(function(){
+            modal.hide();
+        });
+
+        $('.btn-save').click(function(){
+            var id = $("input[name='category_id']").val();
+            var name = $("input[name='category_name']").val();
+            if (name == undefined || name.length == 0){
+                UIkit.notify("分类名称不可为空！", {status:'danger', timeout : 1000});
+                return false;
+            }
+            $.post('/api/category/update', {'category_id': id, 'name': name}, function(data){
+                if (data.status == 'ok'){
+                    UIkit.notify(data.msg, {status:'success', timeout : 1000});
+                    modal.hide();
+                    window.location.reload();
+                }else{
+                    UIkit.notify(data.msg, {status:'danger', timeout : 1000});
+                }
+            }, 'json')
+        });
+
+        $('.cate-delete').click(function(){
+            var $categeory = $(this).parent().parent().children().find('a');
+            var cate_id = $categeory.attr('cate_id');
+            $.post('/api/category/delete', {'category_id': cate_id}, function(data){
+                if(data.status == 'ok'){
+                    UIkit.notify(data.msg, {status:'success', timeout : 1000});
+                    window.location.reload();
+                }else{
+                    UIkit.notify(data.msg, {status:'danger', timeout : 1000});
+                }
+            }, 'json')
+        });
+    })
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="uk-width-1-1 uk-margin-bottom">
+    <div class="uk-panel uk-panel-box">
+        <ul class="uk-breadcrumb">
+            <li><a href="/manage/blogs">日志</a></li>
+            <li class="uk-active"><span>分类</span></li>
+        </ul>
+    </div>
+</div>
+
+<div id="error" class="uk-width-1-1">
+</div>
+
+<!--<div id="loading" class="uk-width-1-1 uk-text-center">-->
+    <!--<span><i class="uk-icon-spinner uk-icon-medium uk-icon-spin"></i> 正在加载...</span>-->
+<!--</div>-->
+
+<div id="vm" class="uk-width-1-1">
+    <form class="uk-form">
+        <input type="text" name="category" placeholder="类别名称" class="uk-margin-small-top uk-form-width-medium">
+        <button type="button" class="uk-button uk-margin-small-top uk-button-primary btn-add">添加</button>
+    </form>
+
+    <table class="uk-table uk-table-hover uk-table-striped">
+        <thead>
+        <tr>
+            <th class="uk-width-7-10">分类名称</th>
+            <th class="uk-width-1-10">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for cate in category %}
+            <tr>
+                <td>
+                    <a target="_blank" cate_id="{{ cate.id }}">{{ cate.name }}</a>
+                </td>
+                <td>
+                    <a class="cate-edit"><i class="uk-icon-edit"></i></a> /
+                    <a class="cate-delete"><i class="uk-icon-trash-o"></i></a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div id="modal-category" class="uk-modal uk-open" aria-hidden="false" style="display: none; overflow-y: scroll;">
+    <div class="uk-modal-dialog">
+        <button type="button" class="uk-modal-close uk-close"></button>
+        <div class="uk-modal-header">
+            <h2>修改分类</h2>
+        </div>
+        <form class="uk-form">
+            <input type="hidden" name="category_id" value="">
+            <input type="text" name="category_name" placeholder="类别名称" class="uk-margin-small-top uk-form-width-large">
+        </form>
+        <div class="uk-modal-footer uk-text-right">
+            <button type="button" class="uk-button btn-cancel">取消</button>
+            <button type="button" class="uk-button uk-button-primary btn-save">保存</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

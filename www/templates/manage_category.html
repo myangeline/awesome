@@ -61,6 +61,10 @@
 
         $('.cate-delete').click(function(){
             var $categeory = $(this).parent().parent().children().find('a');
+            var del = confirm('确定删除分类 <'+ $categeory.text() +'>?');
+            if (!del){
+                return false;
+            }
             var cate_id = $categeory.attr('cate_id');
             $.post('/api/category/delete', {'category_id': cate_id}, function(data){
                 if(data.status == 'ok'){

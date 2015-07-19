@@ -3,6 +3,7 @@ import hashlib
 import logging
 from aiohttp import web
 import json
+import datetime
 from conf.config import configs
 from www import markdown2
 from www.apis import Page, APIValueError, APIPermissionError
@@ -39,30 +40,24 @@ def check_admin(request):
 
 
 @get('/')
-def index(*, page='1'):
-    page_index = get_page_index(page)
-    num = yield from Blog.findnumber('count(id)')
-    page = Page(num, page_index)
-    if num == 0:
-        summary = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, ' \
-                  'sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
-        blogs = [
-            Blog(id='1', name='Test Blog', summary=summary, created_at=time.time() - 120),
-            Blog(id='2', name='Something New', summary=summary, created_at=time.time() - 3600),
-            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time() - 7200),
-            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time() - 7200),
-            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time() - 7200),
-            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time() - 7200),
-            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time() - 7200),
-            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time() - 7200),
-            Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time() - 7200),
-        ]
-    else:
-        blogs = yield from Blog.findall(orderBy='created_at desc')
+def index():
+    blogs = yield from Blog.findall(orderBy='created_at desc')
+    category = yield from Category.findall(orderBy='id desc')
     return {
         '__template__': 'blogs.html',
-        'page': page,
-        'blogs': blogs
+        'blogs': blogs,
+        'category': category
+    }
+
+
+@get('/category/{category_id}')
+def get_blogs_by_category(category_id):
+    blogs = yield from Blog.findall(where="category='" + category_id + "'")
+    category = yield from Category.findall(orderBy='id desc')
+    return {
+        '__template__': 'blogs.html',
+        'blogs': blogs,
+        'category': category
     }
 
 
@@ -119,7 +114,6 @@ def manage(request):
     try:
         check_admin(request)
     except APIPermissionError:
-        print('...')
         return 'redirect:/signin'
     return 'redirect:/manage/blogs'
 
@@ -128,6 +122,7 @@ def manage(request):
 def manage_blogs(request, *, page='1'):
     check_admin(request)
     blogs = yield from Blog.findall(orderBy='created_at desc')
+
     return {
         '__template__': 'manage_blogs.html',
         'page_index': get_page_index(page),
@@ -182,7 +177,8 @@ def api_create_blog(request, *, name, summary, content, category):
         if not content or not content.strip():
             raise APIValueError('content', 'content cannot be empty.')
         blog = Blog(user_id=request.__user__.id, user_name=request.__user__.name, user_image=request.__user__.image,
-                    name=name.strip(), summary=summary.strip(), content=content.strip(), category=category.strip())
+                    name=name.strip(), summary=summary.strip(), content=content.strip(),
+                    category=category.strip(), created_at=datetime.datetime.now())
         yield from blog.save()
     except BaseException as e:
         print(e)
@@ -212,12 +208,16 @@ def api_update_blog(id, request, *, name, summary, content, category):
     return json.dumps({'status': 'ok', 'msg': '日志更新成功！'})
 
 
-@post('/api/blogs/{id}/delete')
+@post('/api/blogs/delete')
 def api_delete_blog(request, *, id):
     check_admin(request)
-    blog = yield from Blog.find(id)
-    yield from blog.remove()
-    return dict(id=id)
+    try:
+        blog = yield from Blog.find(id)
+        yield from blog.remove()
+    except BaseException as e:
+        print(e)
+        return json.dumps({'status': 'error', 'msg': '日志删除失败！'})
+    return json.dumps({'status': 'ok', 'msg': '日志删除成功！'})
 
 
 @get('/manage/category')
@@ -252,8 +252,12 @@ def api_update_category(request, *, category_id, name):
             raise APIValueError('name', 'category name cannot be empty.')
         if not category_id:
             raise APIValueError('category_id', 'category id cannot be empty.')
-        category = Category(name=name, id=category_id, user_id=request.__user__.id)
-        yield from category.update()
+        category = yield from Category.find(category_id)
+        if category:
+            category.name = name
+            yield from category.update()
+        else:
+            return json.dumps({'status': 'error', 'msg': '分类不存在'})
     except BaseException as e:
         print(e)
         return json.dumps({'status': 'error', 'msg': '分类更新失败'})

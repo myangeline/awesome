@@ -3,10 +3,28 @@
 {% block title %}日志{% endblock %}
 
 {% block beforehead %}
-
+<link rel="stylesheet" href="/static/css/components/notify.gradient.css">
+<script src="/static/js/components/notify.js"></script>
 <script>
     $(function () {
-
+        $('.blog-delete').click(function(){
+            var a = $(this).parent().parent().children(':first').find('a');
+            var name = a.text();
+            var del = confirm('确定要删除 <'+name+'> ?');
+            if (del){
+                var blog_id = $(this).attr('blog_id');
+                $.post('/api/blogs/delete', {'id': blog_id}, function(data){
+                    if(data.status == 'ok'){
+                        UIkit.notify(data.msg, {status:'success', timeout : 1000});
+                        window.location.href = '/manage/blogs';
+                    }else{
+                        UIkit.notify(data.msg, {status:'danger', timeout : 1000});
+                    }
+                }, 'json');
+            }else{
+                return false;
+            }
+        })
     })
 
 </script>
@@ -46,17 +64,17 @@
         {% for blog in blogs %}
             <tr>
                 <td>
-                    <a target="_blank" >{{blog.name}}</a>
+                    <a target="_blank" href="/blog/{{ blog.id }}">{{blog.name}}</a>
                 </td>
                 <td>
-                    <a target="_blank" >{{blog.user_name}}</a>
+                    <a>{{blog.user_name}}</a>
                 </td>
                 <td>
                     <span>{{blog.created_at}}</span>
                 </td>
                 <td>
                     <a href="/manage/blogs/edit?blog_id={{blog.id}}"><i class="uk-icon-edit"></i></a>/
-                    <a class="blog-delete"><i class="uk-icon-trash-o"></i></a>
+                    <a class="blog-delete" blog_id="{{blog.id}}"><i class="uk-icon-trash-o"></i></a>
                 </td>
             </tr>
         {% endfor %}

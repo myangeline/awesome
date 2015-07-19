@@ -172,7 +172,8 @@ def init(loop):
     add_routes(app, 'handlers')
     add_static(app)
     srv = yield from loop.create_server(app.make_handler(), HOST, PORT)
-    logging.info('server started at http://' + HOST + ':' + str(PORT))
+    # logging.info('server started at http://' + HOST + ':' + str(PORT))
+    print('server started at http://' + HOST + ':' + str(PORT))
     return srv
 
 

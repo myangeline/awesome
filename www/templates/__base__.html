@@ -10,58 +10,79 @@
     <script src="/static/js/sha1.min.js"></script>
     <script src="/static/js/uikit.min.js"></script>
     <style>
-        .navi-top{
-            background-color:#eee;
-            border-top:1px solid #ccc;
+        .navi-top {
+            background-color: #eee;
+            border-top: 1px solid #ccc;
             position: fixed;
             width: 100%;
             top: 0;
             opacity: 0.5;
+            z-index: 99;
         }
-        .navi-top-logo{
+
+        .navi-top-logo {
             font-size: 24px;
         }
 
-        .navi-top-logo a{
+        .navi-top-logo a {
             text-decoration: none;
             color: grey;
         }
-        .navi-bottom{
-            background-color:#eee;
-            border-top:1px solid #ccc;
+
+        .navi-bottom-fix {
+            background-color: #eee;
+            border-top: 1px solid #ccc;
             position: fixed;
             width: 100%;
             bottom: 0;
         }
+
+        .navi-bottom {
+            background-color: #eee;
+            border-top: 1px solid #ccc;
+            width: 100%;
+            margin-top: 20px;
+        }
     </style>
+    <script>
+        $(function () {
+            //减4是因为浏览器的边框是2像素, 否则会一直判断有滚动条
+            if (document.documentElement.clientHeight < document.documentElement.offsetHeight - 4) {
+                $('.navi-footer').addClass('navi-bottom');
+            }
+            else {
+                $('.navi-footer').addClass('navi-bottom-fix');
+            }
+        })
+    </script>
     {% block beforehead %}<!-- before head  -->{% endblock %}
 </head>
 <body>
-    <div class="navi-top">
-        <div class="uk-container">
-            <div class="uk-panel uk-margin-top uk-margin-bottom navi-top-logo">
-                <a href="/">我只是一个打酱油的码农...</a>
-            </div>
-
+<div class="navi-top">
+    <div class="uk-container">
+        <div class="uk-panel uk-margin-top uk-margin-bottom navi-top-logo">
+            <a href="/">我只想安静的做个码农...</a>
         </div>
-    </div>
-    <div class="uk-container uk-container-center" style="margin-top: 70px;">
-        <div class="uk-grid" >
-            <!-- content -->
-            {% block content %}
-            {% endblock %}
-            <!-- // content -->
-        </div>
-    </div>
 
-    <div class="navi-bottom">
-        <div class="uk-container uk-container-center uk-text-center">
-            <div class="uk-panel uk-margin-top uk-margin-bottom">
-                <p>Powered by <a href=''>Awesome</a>. Copyright &copy; 2015.
-                    [<a href="/manage/" target="_blank">Manage</a>]</p>
-            </div>
-
-        </div>
     </div>
+</div>
+<div class="uk-container uk-container-center" style="margin-top: 70px;">
+    <div class="uk-grid">
+        <!-- content -->
+        {% block content %}
+        {% endblock %}
+        <!-- // content -->
+    </div>
+</div>
+
+<div class="navi-footer">
+    <div class="uk-container uk-container-center uk-text-center">
+        <div class="uk-panel uk-margin-top uk-margin-bottom">
+            <p>Powered by <a href=''>Awesome</a>. Copyright &copy; 2015.
+                [<a href="/manage/" target="_blank">Manage</a>]</p>
+        </div>
+
+    </div>
+</div>
 </body>
 </html>

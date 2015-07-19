@@ -15,7 +15,7 @@ def create_pool(loop, **kw):
     global __pool
     __pool = yield from aiomysql.create_pool(
         host=kw.get('host', 'localhost'),
-        port=3306,
+        port=kw.get('port', 3306),
         user=kw['user'],
         password=kw['password'],
         db=kw['database'],
@@ -57,6 +57,7 @@ def execute(sql, args, autocommit=True):
             if not autocommit:
                 yield from conn.commit()
         except BaseException as e:
+            print(e)
             if not autocommit:
                 yield from conn.rollback()
             raise

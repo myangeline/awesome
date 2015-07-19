@@ -3,9 +3,10 @@ __author__ = 'sunshine'
 
 configs = {
     'db': {
-        'host': '192.168.0.62',
+        'host': '127.0.0.1',
+        'port': 3366,
         'user': 'root',
-        'password': '53iq.com',
+        'password': 'root',
         'database': 'ebdb_awesome'
     }
 }

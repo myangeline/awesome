@@ -24,26 +24,11 @@
                 $.each(data.category, function(i, item){
                     $("#select-category").append("<option value='"+item.id+"'>"+ item.name +"</option>");
                 });
+                $('#select-category').val('{{blog.category}}');
             });
         };
         add_category();
         var blog_id = $('.input-blog-id').val();
-        if (blog_id != undefined && blog_id!= null && blog_id.length>0){
-            // 编辑
-            $.getJSON('/api/blogs/'+blog_id, function(data){
-                if(data.status == 'ok'){
-                    var blog = data.blog;
-                    $("input[name='name']").val(blog.name);
-                    $('#select-category').val(blog.category);
-                    $("textarea[name='summary']").val(blog.summary);
-                    $("textarea[name='content']").val(blog.content);
-                    $('#loading').hide();
-                }
-            });
-        } else{
-          // 创建
-            $('#loading').hide();
-        }
 
         $('.btn-save').click(function(){
             var name = $("input[name='name']").val();
@@ -88,9 +73,9 @@
     <div id="error" class="uk-width-1-1">
     </div>
 
-    <div id="loading" class="uk-width-1-1 uk-text-center">
-        <span><i class="uk-icon-spinner uk-icon-medium uk-icon-spin"></i> 正在加载...</span>
-    </div>
+    <!--<div id="loading" class="uk-width-1-1 uk-text-center">-->
+        <!--<span><i class="uk-icon-spinner uk-icon-medium uk-icon-spin"></i> 正在加载...</span>-->
+    <!--</div>-->
 
     <div id="vm" class="uk-width-1-1">
         <form v-on="submit: submit" class="uk-form uk-form-stacked">
@@ -98,7 +83,7 @@
             <div class="uk-form-row">
                 <label class="uk-form-label">标题:</label>
                 <div class="uk-form-controls">
-                    <input name="name" type="text" placeholder="标题" class="uk-width-1-1" required>
+                    <input name="name" type="text" placeholder="标题" class="uk-width-1-1" value="{{blog.name}}" required>
                 </div>
             </div>
             <div class="uk-form-row">
@@ -111,14 +96,18 @@
                 <label class="uk-form-label">摘要:</label>
                 <div class="uk-form-controls">
                     <textarea rows="4" name="summary" placeholder="摘要"
-                              class="uk-width-1-1" style="resize:none;" required></textarea>
+                              class="uk-width-1-1" style="resize:none;" required>
+                        {{blog.summary}}
+                    </textarea>
                 </div>
             </div>
             <div class="uk-form-row">
                 <label class="uk-form-label">内容:</label>
                 <div class="uk-form-controls">
-                    <textarea data-uk-htmleditor="{mode:'tab'}" rows="20" name="content"
-                              class="uk-width-1-1" required style="resize: none;"></textarea>
+                    <textarea data-uk-htmleditor="{mode:'tab', markdown:true}" rows="20" name="content"
+                              class="uk-width-1-1" required style="resize: none;">
+                        {{blog.content}}
+                    </textarea>
                 </div>
             </div>
             <div class="uk-form-row">

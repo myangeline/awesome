@@ -1,15 +1,16 @@
-import asyncio
-import hashlib
-import logging
-from aiohttp import web
 import json
 import datetime
+
+from aiohttp import web
+
 from conf.config import configs
+
 from www import markdown2
 from www.apis import Page, APIValueError, APIPermissionError
 from www.coreweb import get, post
 from www.models import *
 from www.util.handlerutil import user2cookie, JSONEncoder
+
 
 __author__ = 'sunshine'
 
@@ -118,7 +119,6 @@ def manage(request):
 def manage_blogs(request, *, page='1'):
     check_admin(request)
     blogs = yield from Blog.findall(orderBy='created_at desc')
-
     return {
         '__template__': 'manage_blogs.html',
         'page_index': get_page_index(page),
@@ -131,15 +131,18 @@ def manage_create_blog():
     return {
         '__template__': 'manage_blog_edit.html',
         'id': '',
+        'blog': Blog(),
         'action': '/api/blogs'
     }
 
 
 @get('/manage/blogs/edit')
 def manage_edit_blog(*, blog_id):
+    blog = yield from Blog.find(blog_id)
     return {
         '__template__': 'manage_blog_edit.html',
         'id': blog_id,
+        'blog': blog,
         'action': '/api/blogs/%s' % blog_id
     }
 

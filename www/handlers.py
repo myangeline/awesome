@@ -111,10 +111,6 @@ def authenticate(*, email, password):
 
 @get('/manage/')
 def manage(request):
-    try:
-        check_admin(request)
-    except APIPermissionError:
-        return 'redirect:/signin'
     return 'redirect:/manage/blogs'
 
 
